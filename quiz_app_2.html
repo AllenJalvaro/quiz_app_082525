@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>KPI Quiz</title>
+    <!-- Use Inter font from Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <!-- Use Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: #f3f4f6;
+      }
+      .container {
+        max-width: 960px;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+    <!-- Quiz Container -->
+    <div
+      id="quiz-container"
+      class="bg-white rounded-xl shadow-2xl p-8 w-full transition-all duration-300 transform scale-100 opacity-100"
+    >
+      <!-- Quiz Title -->
+      <h1 class="text-3xl font-bold text-center text-gray-800 mb-6">
+        KPIs Quiz
+      </h1>
+
+      <!-- Quiz Area (dynamically populated) -->
+      <div id="quiz-area" class="min-h-[250px] flex flex-col justify-between">
+        <!-- Loading message -->
+        <div id="loading-message" class="text-center text-gray-600">
+          <p>Loading questions...</p>
+        </div>
+      </div>
+
+      <!-- Feedback & Score Area -->
+      <div
+        id="feedback-area"
+        class="mt-6 text-center text-gray-600 font-medium"
+      ></div>
+
+      <!-- Navigation Buttons -->
+      <div id="navigation-area" class="mt-8 flex justify-between">
+        <button
+          id="next-button"
+          class="w-full bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200 hidden"
+        >
+          Next
+        </button>
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        // The raw CSV data from the user-provided file.
+        const questions_csv = `question,correct_answer,incorrect_answer_1,incorrect_answer_2,incorrect_answer_3,rationale
+      What is 'Customer Churn Rate'?,The percentage of customers who stop using a company's service over a given period,The percentage of new customers a company acquires,The percentage of revenue that is recurring,The percentage of employees who leave a company,Customer churn rate is a critical metric for subscription-based businesses to track customer retention.
+      What does 'SaaS' stand for?,Software as a Service,Service as a Software,Sales and Acquisition Strategy,System and Security,SaaS is a software distribution model where a third-party provider hosts applications and makes them available to customers over the internet.
+      What is 'Cash Flow from Operations'?,A metric used to measure the cash generated from a company's core business operations,A metric used to measure the cash generated from a company's investing activities,A metric used to measure the cash generated from a company's financing activities,A metric used to measure the cash a company has in the bank,Cash flow from operations is a key metric for evaluating a company's financial health.
+      What is 'RVPI'?,Remaining Value to Paid-In Capital,Remaining Value Per Investment,Remaining Value Per Investor,Remaining Value Per Index,RVPI is a metric used to measure a fund's unrealized value relative to the capital contributed by limited partners.
+      What does 'Drag-Along Rights' mean?,The right of a majority shareholder to force a minority shareholder to sell their shares,The right of a minority shareholder to sell their shares,The right of a company to repurchase its shares,The right of a shareholder to receive a dividend,Drag-along rights ensure that a sale can be completed without dissent from minority shareholders.
+      What is 'Retention Rate'?,The percentage of customers who continue to use a company's service over a given period,The percentage of new customers a company acquires,The percentage of revenue that is recurring,The percentage of employees who stay with a company,Retention rate is a critical metric for subscription-based businesses to track customer loyalty.
+      What is 'Customer Lifetime Value' (CLV)?,The total revenue a company can expect from a single customer account throughout the relationship,The total revenue a company can expect from all customers,The total cost of acquiring a new customer,The total cost of retaining a customer,CLV is a key metric for evaluating a company's long-term profitability.
+      What is a 'Term Sheet'?,A non-binding document outlining the terms and conditions of an investment,A legal document that formalizes an investment,A document that lists the company's assets,A document that details the company's operational plan,A term sheet serves as a blueprint for the final legal documents.
+      What is 'Daily Active Users' (DAU)?,The number of unique users who use a product or service on a daily basis,The number of new users who use a product or service on a daily basis,The number of active users who use a product or service on a monthly basis,The number of active users who use a product or service on a weekly basis,DAU is a key metric for measuring a product's engagement.
+      What is 'Cohort Analysis'?,A method used to track the behavior of a group of customers over time,A method used to track the behavior of a single customer,A method used to track the behavior of all customers,A method used to track the behavior of a company's employees,Cohort analysis is a key method for understanding customer behavior.
+      What does the term 'Dry Powder' refer to?,Uninvested capital held by a VC firm,Venture capital firms that have gone public,Startups that are in the seed stage,The amount of debt a company holds,Dry powder is the cash reserved for future investments.
+      What is 'Working Capital'?,A metric used to measure a company's short-term liquidity,A metric used to measure a company's long-term liquidity,A metric used to measure a company's profitability,A metric used to measure a company's debt,Working capital is calculated by subtracting current liabilities from current assets.
+      What is 'Tag-Along Rights'?,The right of a minority shareholder to sell their shares alongside a majority shareholder,The right of a majority shareholder to force a minority shareholder to sell their shares,The right of a company to repurchase its shares,The right of a shareholder to receive a dividend,Tag-along rights protect minority shareholders from being left behind in a sale.
+      What does 'Gross Profit' indicate?,Revenue minus the cost of goods sold,Revenue minus all expenses,Revenue minus operating expenses,Revenue minus taxes,Gross profit is a key metric for evaluating a company's operational efficiency.
+      What is the purpose of 'Due Diligence' in VC?,To investigate a company before making an investment,To manage a company's portfolio,To sell a company's assets,To create a company's financial statements,Due diligence helps VCs make informed investment decisions.
+      What is 'Gross Profit Margin'?,The percentage of revenue left after deducting the cost of goods sold,The total revenue of a company,The net profit of a company,The amount of cash a company has in the bank,Gross profit margin is a key metric for evaluating a company's operational efficiency.
+      Weighted-average anti-dilution does what?,Balances conversion price adjustments,Completely resets price,Eliminates equity structures,Ignores share issuance,This method moderates dilution impact fairly.
+      What is 'Return on Equity' (ROE)?,A metric used to measure a company's profitability relative to its shareholders' equity,A metric used to measure a company's profitability relative to its total assets,A metric used to measure a company's profitability relative to its revenue,A metric used to measure a company's profitability relative to its debt,ROE is a key metric for evaluating a company's financial performance.
+      What does 'Dilution' mean?,The reduction in an investor's ownership percentage due to the issuance of new shares,The increase in a company's valuation,The process of liquidating a company's assets,The process of paying dividends,Dilution occurs when new shares are issued, decreasing the existing investors' stake.
+      What is a 'Down Round'?,A round of financing in which the company's valuation is lower than its previous round,A round of financing that is less successful than expected,A round of financing that is conducted in a short period,A round of financing that is focused on reducing debt,Down rounds can be very dilutive for existing shareholders.
+      Waterfall analysis helps determine:,Proceeds distribution in a liquidity event,Employee growth rate,Burn multiple,Operating margin trends,Waterfall analysis allocates exit proceeds based on ownership terms.
+      What is 'Series B' round typically focused on?,Scaling the business and expanding market reach,Initial product development,Generating initial revenue,Exiting the company,Series B rounds are often used to build a company's operational capacity and market presence.
+      What are Limited Partners (LPs) demanding more of from General Partners (GPs)?,Transparency,More capital calls,Lower fees,Shorter investment cycles,"LPs want cleaner, more transparent, and timely data from GPs." What is 'LTV'?,Lifetime Value,Long-Term Value,Lifetime Valuation,Long-Term Valuation,LTV is a metric used to measure the total revenue a company can expect from a single customer account throughout the relationship.
+      What is 'CAC'?,Customer Acquisition Cost,Customer Acquisition Capital,Customer Acquisition Company,Customer Acquisition Consultant,CAC is a metric used to measure the cost of acquiring a new customer.
+      What is 'DPI'?,Distributed to Paid-In Capital,Distributed Per Investment,Distributed Per Investor,Distributed Per Index,DPI is a metric used to measure a fund's total distributions relative to the capital contributed by limited partners.
+      What is 'Operating Profit Margin'?,The percentage of revenue left after deducting all operating expenses,The total revenue of a company,The net profit of a company,The amount of cash a company has in the bank,Operating profit margin is a key metric for evaluating a company's core business performance. What is a 'Preferred Return'?,A provision that gives an investor a specific return on their investment before the rest of the profits are distributed,The total return on an investment,The annual return on an investment,The expected return on an investment,Preferred return ensures that an investor gets their money back before the fund's general partners.
+      What is a 'Capitalization Table' (Cap Table)?,A spreadsheet that shows the ownership structure of a company,A document that lists the company's assets,A document that shows the company's financial performance,A document that details the company's operational plan,A cap table is essential for tracking ownership and valuation.
+      What is the 'Exit' in venture capital?,When a company is sold, goes public, or is acquired,When a company closes its doors,When an LP decides to leave a fund,When a GP exits the venture capital firm,An exit is the culmination of a successful investment, where the GP and LP realize a return.
+      What is 'Contribution Margin'?,A metric used to measure the profitability of a product or service,A metric used to measure a company's total revenue,A metric used to measure a company's total expenses,A metric used to measure a company's total profit,Contribution margin is calculated by subtracting variable costs from revenue.
+      What is 'Exit Multiple'?,A metric used to calculate the return on an investment,The number of times a company's stock has been sold,The number of years a company has been in business,The number of times a company has raised funding,Exit multiple is calculated by dividing the exit valuation by the total investment.
+      What is a 'Burn Multiple'?,A metric used to measure a company's efficiency at converting burn into ARR,A metric used to measure a company's profitability,A metric used to measure a company's debt,A metric used to measure a company's revenue,Burn multiple is a key metric for evaluating a company's capital efficiency.
+      What does 'Venture Debt' refer to?,A form of debt financing for venture-backed companies,A form of equity financing,A form of government financing,A form of public equity financing,Venture debt is a way for companies to raise capital without selling more equity.
+      What is 'Portfolio Management' in VC?,The process of managing a fund's investments in its portfolio companies,The process of managing a company's financial statements,The process of managing a company's employees,The process of managing a company's products,Portfolio management is crucial for tracking the performance of a fund.
+      What does 'Liquidity' refer to?,The ability to easily convert an asset into cash,The amount of debt a company has,The amount of cash a company has in the bank,The amount of stock a company has issued,Liquidity is a key factor for investors to realize a return.
+      What is 'Debt-to-Equity Ratio'?,A metric used to measure a company's financial leverage,A metric used to measure a company's profitability,A metric used to measure a company's debt,A metric used to measure a company's revenue,Debt-to-equity ratio is a key metric for evaluating a company's risk.
+      What is 'IRR'?,Internal Rate of Return,Internal Revenue Ratio,Internal Return Rate,Internal Revenue Regulation,IRR is a metric used to measure the profitability of a series of investments.
+      What does the term 'Cap Table' stand for?,Capitalization Table,Capital Call Table,Company Assets Table,Corporate Performance Table,A cap table is a document that shows the ownership structure of a company.
+      What is a 'Unicorn'?,A privately held startup company with a valuation of over $1 billion,A mythical creature often used in folklore,A publicly traded company,A company in the seed stage,The term 'unicorn' signifies a rare and highly successful startup.
+      What is 'Net Dollar Retention'?,A metric used to measure a company's ability to retain and grow revenue from its existing customer base,A metric used to measure a company's customer churn,A metric used to measure a company's customer acquisition,A metric used to measure a company's profitability,Net dollar retention is a key metric for evaluating a company's long-term growth potential.
+      What is a 'Roll-up Strategy'?,An acquisition strategy where a company acquires and merges with other smaller companies in the same industry,A sales strategy where a company rolls up its sleeves and gets to work,A marketing strategy where a company rolls out a new product,A financial strategy where a company rolls its debt into a new loan,Roll-up strategies are common in fragmented industries.
+      Which of these is a key benefit of a successful private equity investment?,Higher return on investment (ROI),Faster revenue growth,Reduced operating expenses,Higher retained earnings,Successful private equity investments are measured by strong ROI.
+      What does Improved operating leverage mean?,A company can increase revenue faster than it increases costs,A company's costs are increasing faster than its revenue,A company's revenue is decreasing while its costs are increasing,A company's costs are stable while its revenue is decreasing,Operating leverage shows how efficiently a company uses its fixed costs to generate profit.
+      What is 'Vesting Cliff'?,The period of time an employee must work before they earn any equity,A legal term for a founder's stock,The point at which an employee's equity is fully vested,The process of selling stock,A vesting cliff is designed to ensure employee commitment.
+      What do portfolio management tools help GPs with?,Tracking fund performance and managing valuations,Finding new LPs,Creating legal documents,Conducting due diligence,These tools provide centralized data for monitoring portfolio health.
+      During a stock buyback:,Cash decreases and treasury stock increases,Cash increases and equity expands,Debt disappears completely,Operating expenses rise,Stock buybacks reduce cash and increase treasury stock on the balance sheet.
+      What is 'Gross Churn'?,The percentage of revenue lost from existing customers in a given period,The percentage of revenue gained from new customers,The percentage of customers who stop using a company's service,The percentage of employees who leave a company,Gross churn is a metric used to measure the total revenue lost from existing customers.
+      What is 'Cap Rate'?,The rate of return on a real estate investment property based on the income that the property is expected to generate,The rate of return on a stock,The rate of return on a bond,The rate of return on a mutual fund,Cap rate is a key metric for real estate investors.
+      Which financial metric shows that a company is managing its expenses well?,Higher retained earnings,Lower retained earnings,Higher debt,Lower cash on hand,Retained earnings are profits a company reinvests in its business.
+      Which of these is a sign of a company's operational health?,Improved operating leverage,Increasing debt,Lower gross revenue,Decreased retained earnings,Improved operating leverage is a sign of a strong business model.
+      What is a 'Portfolio Company'?,A company that a VC firm has invested in,A company that manages a portfolio of stocks,A company that is in the seed stage,A company that has recently gone public,Portfolio companies are the core of a VC fund's investments.
+      What is 'Gross Margin'?,The percentage of revenue left after deducting the cost of goods sold,The total revenue of a company,The net profit of a company,The amount of cash a company has in the bank,Gross margin shows the profitability of a product or service.
+      What is a 'Bridge Round'?,A short-term financing round to provide capital until a more substantial round can be raised,A round of funding for construction companies,A round of funding for a bridge,A round of funding that bridges two continents,Bridge rounds are used to sustain a company during a transitional period.
+      What is 'Carry' in a VC fund?,The percentage of a fund's profits that are paid to the general partners,The total amount of money a fund has raised,The amount of money a fund has in the bank,The total amount of debt a fund has,Carry is the primary source of income for general partners.
+      What is 'Cash-on-Cash Return'?,A metric used to calculate the total return on an investment,The amount of cash a company has in the bank,The amount of debt a company has,The amount of equity a company has,Cash-on-cash return is calculated by dividing the total distributions by the total capital contributed. What does 'Runway' refer to?,The amount of time a company has before it runs out of cash,The period before a company's IPO,The time it takes to onboard a new employee,The length of a product's development cycle,Runway is a critical metric for startups to manage their spending.
+      Which outcome signifies a positive financial position for a firm?,Improved operating leverage,Increased debt,Lower retained earnings,Reduced gross revenue,Improved operating leverage suggests a firm is growing its profitability effectively.
+      What does 'Pre-Money Valuation' mean?,The valuation of a company before a new round of financing,The valuation of a company after a new round of financing,The amount of money a company has in the bank,The total revenue of a company,Pre-money valuation is used to determine the price per share of a new financing round.
+      What is 'LTV/CAC Payback Period'?,A metric used to measure the time it takes to recoup the cost of acquiring a new customer,A metric used to measure a company's profitability,A metric used to measure a company's debt,A metric used to measure a company's revenue,LTV/CAC Payback Period is a key metric for evaluating a company's unit economics.
+      What is 'Net Profit Margin'?,The percentage of revenue left after deducting all expenses, including taxes and interest,The total revenue of a company,The gross profit of a company,The amount of cash a company has in the bank,Net profit margin is a key metric for evaluating a company's overall profitability.
+      What is 'Pro Rata Rights'?,The right of an investor to maintain their ownership percentage in future funding rounds,The right to receive a pro-rata share of dividends,The right to sell their shares before other investors,The right to approve new investments,This right allows an investor to avoid dilution in future rounds.
+      What is one of the biggest challenges for venture capital GPs right now?,Efficiently managing their data,Finding talent,Dealing with high-interest rates,Sourcing deals,Manual data processes are time-consuming and prone to errors.
+      Why are old manual processes considered ineffective in VC operations?,They are cumbersome and error-prone,They are highly automated,They reduce transparency,They simplify reporting,Manual processes often result in errors and inefficiencies.
+      What is 'Free Cash Flow' (FCF)?,A metric used to measure the cash a company has left after paying for its operating expenses and capital expenditures,A metric used to measure the cash a company has in the bank,A metric used to measure the cash a company has raised from investors,A metric used to measure the cash a company has paid to its investors,FCF is a key metric for evaluating a company's financial health and ability to pay dividends or repurchase stock.
+      Why is data transparency crucial for LPs?,It helps them evaluate a GP's track record and performance,It allows them to control investment decisions,It ensures they get a higher return,It reduces their fees,LPs require clear data to make informed decisions about their investments.
+      What does 'Term Sheet' refer to in VC?,A non-binding document outlining the key terms of an investment,A legal document that formalizes an investment,A document that lists a company's assets,A document that details a company's operational plan,A term sheet is the first step in a venture capital investment. What does 'Net Burn' indicate?,The rate at which a company is losing money,The rate at which a company is gaining money,The total amount of debt a company has,The amount of cash a company has in the bank,Net burn is calculated by subtracting revenue from operating expenses.
+      What is 'Angel Investor'?,An individual who invests their own money in early- stage startups,A venture capital firm,A bank,A publicly traded company,Angel investors are often the first source of outside capital for a startup.
+      What is 'Annual Recurring Revenue' (ARR)?,The total predictable revenue a company can expect to receive on an annual basis,The total revenue a company can expect to receive on a monthly basis,The total revenue a company can expect to receive on a weekly basis,The total revenue a company can expect to receive on a daily basis,ARR is a key metric for subscription-based businesses. What is 'Average Revenue Per User' (ARPU)?,A metric used to measure the average revenue generated per user,A metric used to measure the average cost of acquiring a user,A metric used to measure the average profit per user,A metric used to measure the average churn per user,ARPU is a key metric for evaluating a company's monetization strategy.
+      What is 'ARR per Customer'?,A metric used to measure the average annual recurring revenue generated per customer,A metric used to measure the average monthly recurring revenue generated per customer,A metric used to measure the average revenue generated per employee,A metric used to measure the average revenue generated per product,ARR per customer is a key metric for evaluating a company's monetization strategy.
+      What is 'Valuation Cap' in a convertible note?,A ceiling on the company's valuation at which the note converts into equity,The maximum amount of money an investor can invest,A floor on the company's valuation,The number of shares a note converts into,Valuation cap is designed to protect early investors from excessive dilution.
+      What is the role of General Partners (GPs) in venture capital?,They run the fund and decide where to invest,They provide the initial capital,They evaluate IPO readiness,They manage secondary markets,GPs oversee fund operations and investment decisions.
+      What is a 'Conversion Cap' in a convertible note?,A ceiling on the company's valuation at which a note converts into equity,The maximum number of shares that can be issued,A limit on the amount of money an investor can invest,A floor on the company's valuation,A conversion cap sets the maximum valuation for the conversion of a note.
+      What is a 'Strategic Investor'?,A corporate investor that invests in a company for strategic reasons, such as a partnership or acquisition,An individual investor,A bank,A government,Strategic investors provide more than just capital.
+      What is 'Post-Money Valuation'?,The valuation of a company after a new round of financing,The valuation of a company before a new round of financing,The amount of money a company has in the bank,The total revenue of a company,Post-money valuation is equal to the pre-money valuation plus the new investment.
+      What does 'Capital Call' mean?,When a GP requests capital from an LP,When a startup requests funding from a VC,When a public company issues new stock,When a company pays back its debt,A capital call is the request for funds from a limited partner by a general partner.
+      Which type of business does traditional private equity typically invest in?,Established businesses,Seed-stage startups,Cryptocurrency platforms,AI- driven tools,"Private equity often focuses on mature, established businesses." What is 'Customer Health Score'?,A metric used to measure the likelihood of a customer to churn,A metric used to measure customer satisfaction,A metric used to measure customer loyalty,A metric used to measure customer acquisition,Customer health score is a key metric for managing customer relationships.
+      What is 'Synergy' in the context of mergers and acquisitions?,The combined value and performance of two companies is greater than the sum of their individual parts,The combined value and performance of two companies is less than the sum of their individual parts,The combined value and performance of two companies is equal to the sum of their individual parts,The combined value and performance of two companies is unrelated to their individual parts,Synergy is the primary reason for most mergers and acquisitions.
+      What does 'Fully Diluted Shares' mean?,The total number of shares outstanding if all convertible securities were converted,The shares that have lost value,The shares that have been repurchased by the company,The shares with the highest voting rights,This includes options, warrants, and all convertible securities.
+      What is 'Return on Assets' (ROA)?,A metric used to measure a company's profitability relative to its total assets,A metric used to measure a company's profitability relative to its equity,A metric used to measure a company's profitability relative to its revenue,A metric used to measure a company's profitability relative to its debt,ROA is a key metric for evaluating a company's asset efficiency.
+      Full-ratchet anti-dilution protection does what?,Resets conversion price to lowest price,Moderately adjusts ownership changes,Removes preferred rights,Limits liquidity,Full-ratchet resets conversion price fully to protect investors.
+      What is 'Customer Retention Rate'?,The percentage of customers who continue to use a company's service over a given period,The percentage of new customers a company acquires,The percentage of revenue that is recurring,The percentage of employees who stay with a company,Customer retention rate is a key metric for evaluating a company's customer loyalty.
+      What is 'Current Ratio'?,A metric used to measure a company's ability to meet its short-term obligations,A metric used to measure a company's long-term obligations,A metric used to measure a company's profitability,A metric used to measure a company's debt,Current ratio is a key metric for evaluating a company's liquidity.
+      What is 'Rule of 40'?,A rule of thumb for evaluating the health of a SaaS company,A rule of thumb for evaluating a company's profitability,A rule of thumb for evaluating a company's debt,A rule of thumb for evaluating a company's revenue,Rule of 40 states that a company's revenue growth rate plus its profit margin should equal or exceed 40%.
+      What is 'Monthly Recurring Revenue' (MRR)?,The total predictable revenue a company can expect to receive on a monthly basis,The total revenue a company can expect to receive on an annual basis,The total revenue a company can expect to receive on a weekly basis,The total revenue a company can expect to receive on a daily basis,MRR is a key metric for subscription-based businesses.
+      Which metric indicates a companys operational efficiency and profitability?,EBITDA,Revenue,Number of employees,CAC,EBITDA shows profitability before interest, taxes, depreciation, and amortization.
+      What is 'SaaS Magic Number'?,A metric used to measure the efficiency of a company's sales and marketing spend,A metric used to measure a company's profitability,A metric used to measure a company's debt,A metric used to measure a company's revenue,SaaS Magic Number is a key metric for evaluating a company's sales efficiency.
+      What is 'Management Fee' in a VC fund?,An annual fee paid by the limited partners to the general partners to cover the fund's operating expenses,A fee paid to a fund's lawyers,A fee paid to a fund's accountants,A fee paid to a fund's employees,Management fees are a fixed percentage of the fund's committed capital.
+      What is 'ARR per Employee'?,A metric used to measure a company's revenue efficiency,A metric used to measure a company's profitability,A metric used to measure a company's debt,A metric used to measure a company's employee satisfaction,ARR per employee is a key metric for evaluating a company's productivity.
+      What is 'Venture Capital'?,A form of private equity financing that is provided by venture capital firms to startups, early-stage, and emerging companies,A form of public equity financing,A form of debt financing,A form of government financing,Venture capital is a high-risk, high-reward investment strategy.
+      What is 'Net Promoter Score' (NPS)?,A metric used to measure customer loyalty,A metric used to measure employee satisfaction,A metric used to measure a company's profitability,A metric used to measure a company's debt,NPS is a metric used to measure a customer's willingness to recommend a company's products or services to others.
+      What is 'ROI'?,Return on Investment,Return on Income,Return on Interest,Return on Inventory,ROI is a metric used to measure the profitability of an investment.
+      What is the 'LTV/CAC Ratio'?,The ratio of a customer's lifetime value to the cost of acquiring them,The ratio of a company's revenue to its expenses,The ratio of a company's assets to its liabilities,The ratio of a company's debt to its equity,This ratio is a key indicator of a company's long-term profitability and efficiency.
+      What is 'Net Churn'?,The percentage of revenue gained or lost from existing customers in a given period,The percentage of revenue gained from new customers,The percentage of customers who stop using a company's service,The percentage of employees who leave a company,Net churn is a metric used to measure the total revenue gained or lost from existing customers.
+      What is 'ESOP'?,Employee Stock Option Plan,Early Stage Operating Plan,Equity Sharing Option Plan,Exit Strategy Operational Plan,ESOPs are a way for companies to incentivize and retain employees.
+      Which metric helps in evaluating a company's ability to cover its debt?,Debt-to- EBITDA,Cash burn,LTV/CAC,ARR,Debt-to-EBITDA assesses a firm's leverage relative to its earnings.
+      What is a common outcome of a successful private equity investment?,Higher return on investment (ROI),Improved operating leverage,Higher retained earnings,Value dilution happens when ownership percentage stays constant but value decreases.
+      What does 'Vesting' mean in the context of equity?,The process by which an employee earns their stock options over time,The process of selling stock,The process of buying stock,The process of granting stock options,Vesting schedules ensure that employees are committed to the company over a period of time.
+      Accretive dilution means:,Value grows even if ownership percentage drops,Value and ownership both decline,Debt levels increase,Margins shrink,Accretive dilution occurs when overall company value rises despite percentage reduction.
+      What is a 'Liquidation Preference'?,The right for preferred stockholders to get paid before common stockholders in an exit,The price at which a stock is liquidated,A type of dividend paid to all shareholders,The ability to liquidate all company assets,This preference ensures a return for investors in a sale or liquidation.
+      How does a strong company perform in terms of expenses and revenue?,Revenue increases faster than costs,Costs increase faster than revenue,Revenue and costs increase at the same rate,Revenue decreases while costs increase,This indicates efficient operations and a path to greater profitability.
+      What is a 'Series A' round?,The first major round of institutional funding,The first round of funding from family and friends,The first round of funding from a bank,The final round of funding before an exit,Series A is the first round where venture capital firms typically invest.
+      Which metric is used to measure the cost to acquire a new customer?,CAC (Customer Acquisition Cost),LTV (Lifetime Value),ARR (Annual Recurring Revenue),MRR (Monthly Recurring Revenue),CAC represents the total cost of marketing and sales needed to acquire a new customer.
+      What is 'TVPI'?,Total Value to Paid-In Capital,Total Value Per Investment,Total Value Per Investor,Total Value Per Index,TVPI is a metric used to measure a fund's total value relative to the capital contributed by limited partners.
+      What is 'Monthly Active Users' (MAU)?,The number of unique users who use a product or service on a monthly basis,The number of new users who use a product or service on a monthly basis,The number of active users who use a product or service on a daily basis,The number of active users who use a product or service on a weekly basis,MAU is a key metric for measuring a product's overall adoption.
+      What is the purpose of a 'Shareholders' Agreement'?,To govern the relationship between shareholders and the company,To govern the relationship between a company and its employees,To govern the relationship between a company and its customers,To govern the relationship between a company and its suppliers,This agreement protects the rights of all shareholders.
+      What is 'ARR'?,Annual Recurring Revenue,Annual Return on Revenue,Annual Revenue Ratio,Annual Realized Revenue,ARR is a measure of a company's predictable revenue streams over a year.
+      Which metric is used to evaluate the efficiency of a sales team?,Payback Period,Net Burn,Gross Margin,Revenue per Employee,Payback period indicates how long it takes to recover the cost of acquiring a customer.
+      What is 'EBITDA'?,Earnings Before Interest, Taxes, Depreciation, and Amortization,Earnings Before Income Tax, Depreciation, and Assets,Expenses Before Income and Total Assets,Ending Balances, Income, Taxes, Depreciation, and Amortization,EBITDA is a measure of a company's financial performance. What does "accretive dilution" mean?,Value grows even if ownership percentage drops,Value and ownership both decline,Debt levels increase,Margins shrink,Accretive dilution occurs when overall company value rises despite percentage reduction.
+      What is 'Churn Rate'?,The percentage of customers who stop using a company's service over a given period,The percentage of new customers a company acquires,The percentage of revenue that is recurring,The percentage of employees who leave a company,Churn is a critical metric for subscription- based businesses to track customer retention.
+      What is 'Quick Ratio'?,A metric used to measure a company's ability to meet its short-term obligations,A metric used to measure a company's long-term obligations,A metric used to measure a company's profitability,A metric used to measure a company's debt,Quick ratio is a key metric for evaluating a company's liquidity.
+      Why is the cap table forward-looking?,It models ownership scenarios over time,It records only past profits,It tracks historical margins,It removes convertible notes,Cap tables are planning tools for future equity and ownership changes.
+`;
+
+        const quizContainer = document.getElementById("quiz-container");
+        const quizArea = document.getElementById("quiz-area");
+        const nextButton = document.getElementById("next-button");
+        const feedbackArea = document.getElementById("feedback-area");
+
+        let questions = [];
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let selectedAnswer = null;
+
+        // Function to parse the CSV string into an array of question objects
+        function parseCSV(csv) {
+          const lines = csv.split("\n").filter((line) => line.trim() !== "");
+          if (lines.length < 2) return [];
+
+          const headers = lines[0].split(",").map((h) => h.trim());
+          const data = lines.slice(1).map((line) => {
+            const values = line
+              .split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/)
+              .map((val) => (val || "").replace(/"/g, ""));
+            let obj = {};
+            headers.forEach((header, i) => {
+              obj[header] = (values[i] || "").trim();
+            });
+            return obj;
+          });
+          return data;
+        }
+
+        // Function to shuffle an array
+        function shuffleArray(array) {
+          for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+          }
+        }
+
+        // Function to display the current question
+        function displayQuestion() {
+          if (currentQuestionIndex >= questions.length) {
+            endQuiz();
+            return;
+          }
+
+          const questionData = questions[currentQuestionIndex];
+          const allAnswers = [
+            questionData.correct_answer,
+            questionData.incorrect_answer_1,
+            questionData.incorrect_answer_2,
+            questionData.incorrect_answer_3,
+          ].filter((a) => a);
+
+          shuffleArray(allAnswers);
+
+          quizArea.innerHTML = `
+            <div class="mb-6">
+              <p class="text-xl font-medium text-gray-700 mb-4">
+                ${questionData.question}
+              </p>
+            </div>
+            <div id="options-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              ${allAnswers
+                .map(
+                  (answer) => `
+                <button class="answer-option w-full bg-gray-100 text-gray-800 text-left py-4 px-6 rounded-lg shadow-sm hover:bg-gray-200 transition-colors duration-200" data-answer="${answer}">
+                  ${answer}
+                </button>`
+                )
+                .join("")}
+            </div>
+          `;
+
+          nextButton.classList.add("hidden");
+          feedbackArea.textContent = "";
+          selectedAnswer = null;
+          addEventListenersToOptions();
+        }
+
+        // Function to handle a user's answer selection
+        function handleAnswerSelection(event) {
+          const buttons = document.querySelectorAll(".answer-option");
+          buttons.forEach((btn) => (btn.disabled = true));
+
+          selectedAnswer = event.target.getAttribute("data-answer");
+          const correctAnswer = questions[currentQuestionIndex].correct_answer;
+
+          if (selectedAnswer === correctAnswer) {
+            score++;
+            event.target.classList.add(
+              "bg-green-500",
+              "text-white",
+              "hover:bg-green-600"
+            );
+            feedbackArea.textContent = "Correct!";
+          } else {
+            event.target.classList.add(
+              "bg-red-500",
+              "text-white",
+              "hover:bg-red-600"
+            );
+            feedbackArea.textContent = "Incorrect.";
+
+            // Highlight the correct answer
+            buttons.forEach((btn) => {
+              if (btn.getAttribute("data-answer") === correctAnswer) {
+                btn.classList.add("bg-green-500", "text-white");
+              }
+            });
+          }
+          nextButton.classList.remove("hidden");
+        }
+        // Add event listeners to the answer options
+        function addEventListenersToOptions() {
+          document
+            .querySelectorAll(".answer-option")
+            .forEach((button) =>
+              button.addEventListener("click", handleAnswerSelection)
+            );
+        }
+
+        // Function to handle the "Next" button click
+        function handleNext() {
+          if (selectedAnswer) {
+            currentQuestionIndex++;
+            displayQuestion();
+          }
+        }
+
+        // Function to end the quiz and show the score
+        function endQuiz() {
+          const totalQuestions = questions.length;
+          quizArea.innerHTML = `
+            <div class="text-center my-8">
+              <h2 class="text-2xl font-bold text-gray-800 mb-4">Quiz Complete!</h2>
+              <p class="text-3xl font-extrabold text-blue-600">
+                Your score: ${score} / ${totalQuestions}
+              </p>
+            </div>
+          `;
+          nextButton.textContent = "Restart Quiz";
+          nextButton.classList.remove("hidden");
+          nextButton.removeEventListener("click", handleNext);
+          nextButton.addEventListener("click", restartQuiz);
+        }
+
+        // Function to restart the quiz
+        function restartQuiz() {
+          currentQuestionIndex = 0;
+          score = 0;
+          nextButton.textContent = "Next";
+          nextButton.removeEventListener("click", restartQuiz);
+          nextButton.addEventListener("click", handleNext);
+          quizContainer.classList.add("transform", "scale-0", "opacity-0");
+          setTimeout(() => {
+            displayQuestion();
+            quizContainer.classList.remove("transform", "scale-0", "opacity-0");
+          }, 300);
+        }
+
+        // Initialization
+        questions = parseCSV(questions_csv);
+        // Deduplicate questions to ensure each question is unique
+        const uniqueQuestions = {};
+        questions.forEach((q) => {
+          uniqueQuestions[q.question.trim().toLowerCase()] = q;
+        });
+        questions = Object.values(uniqueQuestions);
+
+        shuffleArray(questions);
+        displayQuestion();
+        nextButton.addEventListener("click", handleNext);
+      });
+    </script>
+  </body>
+</html>
